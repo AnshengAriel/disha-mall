@@ -17,6 +17,7 @@ public enum HttpStatus {
     PARAM_ERROR(10202, "The parameter is error"),
     AUTH_ERROR(10203, "Auth error"),
     URL_ERROR(10204, "Request url is not exist"),
+    AUTH_HEADER_IS_NULL_ERROR(10205, "Auth header is null"),
 
     // CRUD
     DATA_INSERTED_FAILED(10300, "Insert data failed"),
@@ -39,6 +40,7 @@ public enum HttpStatus {
 
     // 文件
     FILE_UPLOAD_FAILED(20100, "The file upload failed"),
+    FILE_IS_EXISTS(20101, "The file is exists"),
 
     // 分类
     CATEGORY_CODE_EXISTS(20300, "The category code exists"),

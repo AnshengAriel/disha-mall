@@ -4,15 +4,20 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.ariel.disha.mall.consts.NumberConst;
+import com.ariel.disha.mall.init.InjectBeans;
 import com.baomidou.mybatisplus.core.conditions.AbstractWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.mysql.cj.jdbc.exceptions.NotUpdatable;
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @author ariel
@@ -21,6 +26,9 @@ import java.util.function.Consumer;
  */
 public interface CommonMapper<E> extends BaseMapper<E> {
 
+    // 注入一个懒加载bean
+    Supplier<SqlSessionFactory> BEAN_FACTORY = InjectBeans.inject(SqlSessionFactory.class);
+
     default WrapperBuilder<E> wrapper() {
         return new WrapperBuilder<>(this);
     }
@@ -28,6 +36,7 @@ public interface CommonMapper<E> extends BaseMapper<E> {
     class WrapperBuilder<E> {
 
         private final BaseMapper<E> baseMapper;
+
         /**
          * 默认校验字段值，空语句被省略
          */
@@ -71,12 +80,12 @@ public interface CommonMapper<E> extends BaseMapper<E> {
             this.unCheck = unCheck;
         }
 
-        public WrapperBuilder<E> forbidCheck() {
+        public WrapperBuilder<E> configForbidCheck() {
             setUnCheck(true);
             return this;
         }
 
-        public WrapperBuilder<E> allowEmptyCondition() {
+        public WrapperBuilder<E> configAllowEmptyCondition() {
             setAllowEmptyCondition(true);
             return this;
         }
@@ -117,6 +126,22 @@ public interface CommonMapper<E> extends BaseMapper<E> {
                 throw conditionEmptyException;
             }
             return wrapper;
+        }
+
+        public int insertBatch(List<E> list) {
+            SqlSessionFactory sqlSessionFactory = BEAN_FACTORY.get();
+            SqlSession session = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
+            try {
+                for (E e : list) {
+                    baseMapper.insert(e);
+                }
+                session.commit();
+            } catch (Exception e) {
+                session.rollback();
+            } finally {
+                session.close();
+            }
+            return list.size();
         }
 
         public int update() {
@@ -285,6 +310,17 @@ public interface CommonMapper<E> extends BaseMapper<E> {
             return this;
         }
 
+        public WrapperBuilder<E> nin(String column, Object[] vals) {
+            if (isUnCheck() || valid(vals)) {
+                if (vals.length == 1) {
+                    queryOps.add(wrapper -> wrapper.ne(column, vals[0]));
+                }else {
+                    queryOps.add(wrapper -> wrapper.notIn(column, vals));
+                }
+            }
+            return this;
+        }
+
         public WrapperBuilder<E> like(String column, String val) {
             if (isUnCheck() || valid(val)) {
                 queryOps.add(wrapper -> wrapper.like(column, val));
@@ -385,6 +421,10 @@ public interface CommonMapper<E> extends BaseMapper<E> {
 
         public WrapperBuilder<E> eqRootId(Integer val) {
             return eq("root_id", val);
+        }
+
+        public WrapperBuilder<E> eqRoleId(Integer val) {
+            return eq("role_id", val);
         }
 
         public WrapperBuilder<E> eqRecommended(Boolean val) {
@@ -555,6 +595,10 @@ public interface CommonMapper<E> extends BaseMapper<E> {
             return inc("duration", val);
         }
 
+        public WrapperBuilder<E> setAvatar(String val) {
+            return set("avatar", val);
+        }
+
         public WrapperBuilder<E> setPassword(String val) {
             return set("password", val);
         }
@@ -643,8 +687,16 @@ public interface CommonMapper<E> extends BaseMapper<E> {
             return set("theme", val);
         }
 
+        public WrapperBuilder<E> setTitle(String val) {
+            return set("title", val);
+        }
+
         public WrapperBuilder<E> setRecommended(Boolean val) {
             return set("recommended", val);
+        }
+
+        public WrapperBuilder<E> setRuleId(Integer val) {
+            return set("rule_id", val);
         }
 
         public WrapperBuilder<E> setUpdateTime() {
@@ -703,6 +755,10 @@ public interface CommonMapper<E> extends BaseMapper<E> {
             return select("id");
         }
 
+        public WrapperBuilder<E> selectRuleId() {
+            return select("rule_id");
+        }
+
         public WrapperBuilder<E> selectFavoriteCount() {
             return select("favorite_count");
         }
@@ -741,6 +797,10 @@ public interface CommonMapper<E> extends BaseMapper<E> {
 
         public WrapperBuilder<E> setState(Object val) {
             return set("state", val);
+        }
+
+        public WrapperBuilder<E> setStatus(Object val) {
+            return set("status", val);
         }
 
         public WrapperBuilder<E> eqSubmissionId(Integer val) {
@@ -798,5 +858,6 @@ public interface CommonMapper<E> extends BaseMapper<E> {
         public WrapperBuilder<E> lteTime(Long val) {
             return lte("time", val);
         }
+
     }
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ariel.disha.mall.main.mapper.NoticeMapper">
+
+
+    <select id="noticePage" resultType="com.ariel.disha.mall.consts.entity.Notice">
+        select * from notice order by create_time desc
+    </select>
+
+</mapper>

@@ -4,4 +4,17 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ariel.disha.mall.main.mapper.UserMapper">
 
+    <select id="userPage" resultType="com.ariel.disha.mall.consts.dto.UserDto">
+        SELECT * FROM user
+        <where>
+            1 = 1
+            <if test="vo.type != null">
+                AND type = #{vo.type}
+            </if>
+            <if test="vo.name != null and vo.name != '' ">
+                AND name LIKE concat('%',#{vo.name},'%')
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
 </mapper>

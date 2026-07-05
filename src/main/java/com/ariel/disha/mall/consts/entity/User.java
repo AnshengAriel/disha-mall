@@ -26,6 +26,8 @@ public class User implements Serializable {
 
     private Integer type;
 
+    private Integer status;
+
     private String name;
 
     private String password;
